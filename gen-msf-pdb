@@ -2,7 +2,7 @@
 
 #####
 # File is run as an add-on by "msf-archinstall"
-.. Unless you want to modify it, by all means.
+# .. Unless you want to modify it, by all means.
 #####
 
 pass=$1
