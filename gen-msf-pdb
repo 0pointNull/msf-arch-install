@@ -4,8 +4,7 @@
 # File is run as an add-on by "msf-archinstall"
 # .. Unless you want to modify it, by all means.
 #####
-
-pass=$1
+POSTGRES_DIR="/var/lib/postgres"
 
 _PORT=5423
 _HOST="localhost"
