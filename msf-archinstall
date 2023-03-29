@@ -66,9 +66,14 @@ function configure_msf_database() {
 
         if [[ -f "gen-msf-pdb" ]]; then
             chmod +x gen-msf-pdb && ./gen-msf-pdb ${_PASS}
+        fi
+    else
+        echo -e "\n\033[37m[I] Could not find postgres primary directory ${POSTGRES_DIR}, probably \"postgresql\" is not installed, installing and re-running method...\n\033[0m"
+        pacman -S postgresql
+        if [[ $? -eq 0 ]]; then
+            configure_msf_database
         else
-            # Download the file again...
-            echo "// Downloading database config script..."
+            echo -e "\n\033[31m[!!]\033[37m Could not install \"postgresql\", installer cannot continue...\033[0m\n"; exit 1
         fi
     fi
 }
