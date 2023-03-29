@@ -37,6 +37,13 @@ function check_os() {
     fi
 }
 
+function check_conflicting_archrepo() {
+    if grep -Fqx "archstrike" /etc/pacman.conf || grep -Fqx "blackarch" /etc/pacman.conf
+    then
+        echo -e "\033[33m[W]\033[37m Metasploit may conflict with these repositories, please disable them and re-run the script...\033[0m\n"; exit
+    fi
+}
+
 function check_if_msf_exits() {
     if [ -d ${MSF_DEF_DIR} ]; then
         echo -e "\n\033[37m[I] Metasploit exits in /opt, would you like me to remove and re-install?\033[0m"
@@ -80,5 +87,6 @@ function configure_msf_database() {
 
 check_root
 check_os
+check_conflicting_archrepo
 check_if_msf_exits
 configure_msf_database
