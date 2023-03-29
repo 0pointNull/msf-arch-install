@@ -1,0 +1,58 @@
+#!/bin/bash
+
+pass=$1
+
+_PORT=5423
+_HOST="localhost"
+_USER="msfuser"
+_PASS=${pass}
+_DB="msfdb"
+_TO=5
+_POOL=200
+
+function generate_dbyml() {
+    if [ -d "${HOME}/.msf4" ]; then
+        cd "${HOME}/.msf4" && touch database.yml
+
+        echo -e """
+        production: &pgsql\n
+          host: ${_HOST}\n
+          username: ${_USER}\n
+          passowrd: ${_PASS}\n
+          adapter: postgresql\n
+          database: ${_DB}\n
+          port: ${_PORT}\n
+          pool: ${_POOL}\n
+          timeout: ${TO}\n
+        """ >> database.yml
+
+        if [[ $? -eq 0 ]]; then
+            echo -e "\033[32m[+]\033[37m Successfully generated database.yml. RUn \"msfconsole\" to get started...\n\033[0m"
+        else
+            echo -e "\n\033[31m[-]\033[37m Could not generate database.yml...\033[0m\n"; exit 1
+        fi
+    fi
+}
+
+function generate_pdb() {
+    echo "// Starting database modules..."; systemctl start postgresql
+    echo "// Initializing data stream..."; sudo -u postgres initdb --locale en_US.UTF-8 -E UTF8 -D '${POSTGRES_DIR}/data'
+    echo "// Creating primary user...";
+
+    /usr/bin/expect <<EOD
+
+    spawn sudo -u postgres createuser ${_USER} -P -S -R -D
+    expect "Enter password for new role: "
+    send "$1\n"
+    expect "Enter it again: "
+    send "$1\n"
+    expect eof
+    EOD
+
+    echo "// Creating database...";
+    sudo -u postgres createdb -O ${_USER} ${_DB}
+    echo -e "\033[32mSUccessfully completed database init process...\033[0m"
+}
+
+generate_pdb
+generate_dbyml

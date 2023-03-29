@@ -1,0 +1,79 @@
+#!/bin/bash
+
+## Establish directory data
+MSF_DEF_DIR="/opt/metasploit"
+MSF_LOCAL=~/.msf4
+POSTGRES_DIR="/var/lib/postgres"
+
+
+## Variable data - Config for "database.yml"
+_PORT=5423
+_HOST="localhost"
+_USER="msfuser"
+_PASS="msfpass"
+_DB="msfdb"
+_TO=5
+_POOL=200
+
+
+## Other variable data
+OS=$(cat /etc/os-release | awk -F'=' '/^ID=/ {print $2}')
+
+## Functions
+function check_root() {
+    if [[ "$(id -u)" != "0" ]]; then
+        echo -e "\033[31m\n[-]\033[37m Please run as root...\n\033[0m"; exit 1
+    fi
+}
+
+function check_os() {
+    if [ ${OS} == "arch" ] \
+    || [ ${OS} == "manjaro" ] \
+    || [ ${OS} == "blackarch" ] \
+    || [ ${OS} == "antegros" ]; then
+        echo -e "\033[32mDetected OS:\t\033[37m${OS}...\033[0m"
+    else
+        echo -e "\n\033[31m[!!]\033[37m Non-Arch system detected..I install on Arch BTW..\033[0m\n"; exit 1
+    fi
+}
+
+function check_if_msf_exits() {
+    if [ -d ${MSF_DEF_DIR} ]; then
+        echo -e "\n\033[37m[I] Metasploit exits in /opt, would you like me to remove and re-install?\033[0m"
+        # Provide a menu for the user
+        read -p "Perform action? [y/n]: " yn
+
+        case $yn in
+            [Yy]*)
+                pacman -R metasploit && pacman -S metasploit; break;;
+            [Nn]*)
+                echo -e "\033[37m[I] Exiting the installer...\033[0m"; exit 1; break;;
+            *) echo -e "\n\033[37mPlease answer with a [Y/y] or [N/n]...\033[0m"
+        esac
+    else
+        echo -e "\n\033[34m[*]\033[37m Performing metasploit installation via Pacman...\033[0m\n"
+        pacman -S metasploit jdk11-openjdk postgresql expect
+
+        if [[ $? -eq 0 ]]; then
+            echo -e "\n\033[32m[+]\033[37m Succesfully installed metasploit using package manager...\033[0m\n"
+        fi
+    fi
+}
+
+function configure_msf_database() {
+    if [ -d ${POSTGRES_DIR} ]; then
+        echo -e "\n\033[34m[*]\033[37m Configuring primary database for MSF...\033[0m"
+
+        if [[ -f "gen-msf-pdb" ]]; then
+            chmod +x gen-msf-pdb && ./gen-msf-pdb ${_PASS}
+        else
+            # Download the file again...
+            echo "// Downloading database config script..."
+        fi
+    fi
+}
+
+check_root
+check_os
+check_if_msf_exits
+configure_msf_database
